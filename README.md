@@ -47,23 +47,6 @@ very-long        57 fps 40.0s  Throughout the history of human civilization, the
 
 ---
 
-## Comparison with Other Implementations
-
-| | **This repo** | [voxtral-mini-realtime-rs](https://github.com/TrevorS/voxtral-mini-realtime-rs) | [voxtral-tts.c](https://github.com/mudler/voxtral-tts.c) |
-|---|:---:|:---:|:---:|
-| **Language** | Python/PyTorch | Rust/Burn/WGPU | Pure C |
-| **Quantization** | int4 HQQ (optimal) | Q4_0 GGUF (RTN) | None (BF16) |
-| **Speed** | **RTF 0.22** | RTF 0.97 | RTF 7.3 |
-| **Real-time?** | **4.6x faster** | ~1x (barely) | 7x slower |
-| **VRAM** | 3.8 GB | 2.67 GB | ~8 GB |
-| **Quality** | Near-lossless (HQQ) | 8.49% WER (Q4 RTN) | No metrics |
-| **Platform** | CUDA (NVIDIA) | Cross-platform + Browser | CPU + optional CUDA |
-| **Tested GPU** | RTX 3090 | Unspecified | DGX Spark (Blackwell) |
-
-**Key takeaway:** This repo is **~4.4x faster** than the Rust implementation and **~33x faster** than the C implementation (despite the C version running on newer Blackwell hardware). The HQQ algorithm is critical -- simple round-to-nearest (Q4_0) degrades quality significantly.
-
----
-
 ## Quick Start
 
 ### Setup
