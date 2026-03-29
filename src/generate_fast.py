@@ -289,9 +289,7 @@ def main():
     parser.add_argument("--flow-steps", type=int, default=3, help="Flow matching steps (default 3, original 8)")
     parser.add_argument("--cfg-alpha", type=float, default=1.2, help="CFG strength (1.2=full quality, 1.0=off/faster)")
     parser.add_argument("--compile", action="store_true", help="Use torch.compile")
-    parser.add_argument("--static-cache", action="store_true", help="Pre-allocated BF16 KV cache (enables backbone CUDA graphs)")
-    parser.add_argument("--kv-quant-v3", action="store_true", help="Enable Phase 2 quantized KV cache")
-    parser.add_argument("--residual-len", type=int, default=128, help="BF16 residual buffer size for KV cache")
+    parser.add_argument("--static-cache", action="store_true", help="Pre-allocated BF16 KV cache + backbone compile")
     parser.add_argument("--device", type=str, default="cuda")
     args = parser.parse_args()
 
@@ -314,16 +312,7 @@ def main():
         model = load_original_model(args.model_dir, device=args.device)
     print(f"Model loaded in {time.time()-t0:.1f}s")
 
-    static_cache = None
-    if args.kv_quant_v3:
-        from kv_cache_quant.attention_v3 import enable_kv_cache_quant_v3
-        model, static_cache = enable_kv_cache_quant_v3(
-            model, max_seq_len=args.max_frames + 200,
-            residual_len=args.residual_len)
-        model.backbone.setup_freqs(max_len=args.max_frames + 200, device=args.device)
-        static_cache.set_rope_tables(model.backbone.freqs_cis)
-
-    if args.static_cache and not args.kv_quant_v3:
+    if args.static_cache:
         print("Enabling static BF16 KV cache...")
         enable_static_cache(model, max_seq_len=args.max_frames + 300)
 

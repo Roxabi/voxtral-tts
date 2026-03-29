@@ -96,7 +96,8 @@ def load_model_int4(
 
 if __name__ == "__main__":
     import soundfile as sf
-    from generate_fast import TekkenTokenizer, generate_speech_fast
+    from generate_fast import generate_speech_fast
+    from generate import TekkenTokenizer
 
     print("=" * 60)
     print("Voxtral-4B-TTS — torchao int4 + HQQ + tinygemm")
@@ -104,10 +105,11 @@ if __name__ == "__main__":
 
     torch.cuda.reset_peak_memory_stats()
 
-    model = load_model_int4("/data/mistral-voice/models/original")
+    MODEL_DIR = str(Path(__file__).parent.parent / "models" / "original")
+    model = load_model_int4(MODEL_DIR)
 
-    tok = TekkenTokenizer("/data/mistral-voice/models/original/tekken.json")
-    voice_dir = "/data/mistral-voice/models/original/voice_embedding"
+    tok = TekkenTokenizer(f"{MODEL_DIR}/tekken.json")
+    voice_dir = f"{MODEL_DIR}/voice_embedding"
 
     with torch.inference_mode():
         # Warmup

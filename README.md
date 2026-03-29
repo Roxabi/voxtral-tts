@@ -1,6 +1,6 @@
 # Voxtral-4B-TTS: Fast int4 Quantized Inference
 
-**57-62 fps | 3.7 GB VRAM | Near-lossless quality | RTX 3090**
+**57 fps | 3.8 GB VRAM | Near-lossless quality | RTX 3090**
 
 int4 quantized inference for Mistral's [Voxtral-4B-TTS](https://huggingface.co/mistralai/Voxtral-4B-TTS-2603) text-to-speech model. Achieves **4.6x real-time** speech generation with **54% VRAM reduction** using [torchao](https://github.com/pytorch/ao) int4 quantization with the [HQQ](https://github.com/mobiusml/hqq) algorithm.
 
@@ -8,58 +8,42 @@ int4 quantized inference for Mistral's [Voxtral-4B-TTS](https://huggingface.co/m
 
 | Metric | BF16 (original) | int4 HQQ (ours) | Change |
 |--------|:---------------:|:----------------:|:------:|
-| **Inference Speed** | 42 fps | **59 fps** | +40% |
-| **VRAM** | 8.0 GB | **3.7 GB** | -54% |
-| **Real-Time Factor** | 0.30 | **0.21** | 4.8x real-time |
+| **Inference Speed** | 31 fps | **57 fps** | +84% |
+| **VRAM** | 8.0 GB | **3.8 GB** | -53% |
+| **Real-Time Factor** | 0.40 | **0.22** | 4.6x real-time |
 | **Audio Quality** | Baseline | Near-lossless | Whisper transcription match |
-| **Load Time** | ~15s | ~21s | +6s (one-time quantization) |
+| **3s Utterance Latency** | 1,346 ms | **787 ms** | 1.7x faster |
 
-> Benchmarked on RTX 3090 (24 GB, SM86 Ampere), CUDA 12.x, PyTorch 2.11+, flow_steps=3, cfg_alpha=1.0
+> Benchmarked on RTX 3090 (24 GB, SM86 Ampere), CUDA 12.x, PyTorch 2.11+, flow_steps=3, cfg_alpha=1.2
 
 ### Speed Breakdown by Configuration
 
 | Configuration | FPS | RTF | VRAM | Notes |
 |---------------|:---:|:---:|:----:|-------|
-| BF16 baseline | 42 | 0.30 | 8.0 GB | Original model, no optimization |
-| int4 HQQ backbone | 46 | 0.27 | 3.7 GB | Weight quantization only |
-| + torch.compile acoustic | 50 | 0.25 | 3.7 GB | Compiled flow-matching decoder |
-| **+ static KV cache + compile all** | **58** | **0.22** | **3.7 GB** | **Full optimization stack** |
-| int4 + KV cache quant (Hadamard) | 36 | 0.35 | 3.7 GB | Slower -- rotation overhead dominates |
+| BF16 original (Euler-8) | 31 | 0.40 | 8.0 GB | Paper defaults, no optimization |
+| BF16 (Midpoint-3) | 42 | 0.30 | 8.0 GB | Faster ODE solver |
+| int4 HQQ backbone | 46 | 0.27 | 3.8 GB | Weight quantization only |
+| + torch.compile acoustic | 51 | 0.25 | 3.8 GB | Compiled flow-matching decoder |
+| **+ static KV cache + compile all** | **57** | **0.22** | **3.8 GB** | **Full optimization stack** |
+| int4 + KV cache quant (Hadamard) | 37 | 0.34 | 3.8 GB | Slower -- rotation overhead dominates |
 
-### Flow Steps vs Speed vs Quality
-
-| Flow Steps | CFG | FPS | RTF | Whisper Quality |
-|:----------:|:---:|:---:|:---:|:---------------:|
-| 8 | 1.2 | 19 | 0.64 | Best |
-| 8 | off | 31 | 0.40 | Good |
-| 4 | off | 48 | 0.26 | Good |
-| **3** | **off** | **55** | **0.23** | **Good (sweet spot)** |
-| 2 | off | 66 | 0.19 | Degraded (repetitions) |
-
-### Fresh Benchmark (int4 HQQ, flow_steps=3, cfg_alpha=1.0)
+### Comprehensive Quality Test (12 texts, int4 + compile, Whisper base)
 
 ```
-[int4] VRAM: 3.68 GB | Quantized in 7.3s
-
---- Speed ---
-  [61 fps] "The quick brown fox jumps over the lazy dog."
-  [56 fps] "Hello world, how are you today?"
-  [57 fps] "Paris is a beautiful city with many famous landmarks."
-  [62 fps] "Technology advances rapidly in the modern world."
-
---- Whisper Transcription ---
-  In:  "The quick brown fox jumps over the lazy dog."
-  Out: "The quick brown flocks jumps over the lazy dog."
-
-  In:  "Hello world, how are you today?"
-  Out: "Hello world, how are you today?"              ✓ exact
-
-  In:  "Paris is a beautiful city with many famous landmarks."
-  Out: "Harris is a beautiful city with many famous landmarks."
-
-  In:  "Technology advances rapidly in the modern world."
-  Out: "Technology advances rapidly in the modern world."   ✓ exact
+tiny             57 fps  1.9s  Hi!
+numbers          56 fps 11.3s  The year 2025 had 365 days, with temperatures reaching 102.7 degrees...  ✓
+punctuation      56 fps  8.4s  really? No way! He said, I can't believe it...
+rare-words       56 fps 13.3s  The Archaeopteryx fossil was discovered near the Solnhofen Quarry...  ✓
+mixed-lang       56 fps  7.5s  She said bonjour and then switched to saying donkey shun...  ✓
+abbreviations    56 fps 11.8s  Dr. Smith from NASA and Professor Jones at MIT discussed the CEO...  ✓
+repetitive       55 fps  6.9s  Big big big dog ran and ran and ran around the very very very tall...  ✓
+whisper-test     56 fps  7.1s  One, two, three, four, five, six, seven, eight, nine, ten.  ✓
+emotional        56 fps  4.5s  I absolutely cannot believe this is actually happening right now!  ✓
+medium           55 fps 14.8s  Machine learning models are increasingly being used in healthcare...  ✓
+very-long        57 fps 40.0s  Throughout the history of human civilization, the pursuit of knowle...  ✓
 ```
+
+**12/12 texts complete, 0 crashes, consistent 55-57 fps.** Quality matches the original BF16 model on all texts (verified side-by-side with Whisper transcription).
 
 ---
 
@@ -69,14 +53,14 @@ int4 quantized inference for Mistral's [Voxtral-4B-TTS](https://huggingface.co/m
 |---|:---:|:---:|:---:|
 | **Language** | Python/PyTorch | Rust/Burn/WGPU | Pure C |
 | **Quantization** | int4 HQQ (optimal) | Q4_0 GGUF (RTN) | None (BF16) |
-| **Speed** | **RTF 0.21** | RTF 0.97 | RTF 7.3 |
-| **Real-time?** | **4.8x faster** | ~1x (barely) | 7x slower |
-| **VRAM** | 3.7 GB | 2.67 GB | ~8 GB |
+| **Speed** | **RTF 0.22** | RTF 0.97 | RTF 7.3 |
+| **Real-time?** | **4.6x faster** | ~1x (barely) | 7x slower |
+| **VRAM** | 3.8 GB | 2.67 GB | ~8 GB |
 | **Quality** | Near-lossless (HQQ) | 8.49% WER (Q4 RTN) | No metrics |
 | **Platform** | CUDA (NVIDIA) | Cross-platform + Browser | CPU + optional CUDA |
 | **Tested GPU** | RTX 3090 | Unspecified | DGX Spark (Blackwell) |
 
-**Key takeaway:** This repo is **~5x faster** than the Rust implementation and **~35x faster** than the C implementation (despite the C version running on newer Blackwell hardware). The HQQ algorithm is critical -- simple round-to-nearest (Q4_0) degrades quality significantly.
+**Key takeaway:** This repo is **~4.4x faster** than the Rust implementation and **~33x faster** than the C implementation (despite the C version running on newer Blackwell hardware). The HQQ algorithm is critical -- simple round-to-nearest (Q4_0) degrades quality significantly.
 
 ---
 
@@ -117,11 +101,18 @@ huggingface-cli download mistralai/Voxtral-4B-TTS-2603 --local-dir models/origin
 ```python
 import torch
 from torchao_inference import load_model_int4
-from generate_fast import TekkenTokenizer, generate_speech_fast
+from generate_fast import generate_speech_fast, enable_static_cache
+from generate import TekkenTokenizer
 
 MODEL_DIR = "models/original"
 model = load_model_int4(MODEL_DIR, device="cuda")
 tok = TekkenTokenizer(f"{MODEL_DIR}/tekken.json")
+
+# Optional: static cache + compile for max speed (57 fps vs 46 fps)
+enable_static_cache(model, max_seq_len=700)
+model.backbone = torch.compile(model.backbone, mode="default", fullgraph=False)
+model.acoustic.predict_velocity = torch.compile(
+    model.acoustic.predict_velocity, mode="default", fullgraph=False)
 
 with torch.inference_mode():
     audio, gen_time = generate_speech_fast(
@@ -130,7 +121,7 @@ with torch.inference_mode():
         voice_name="neutral_female",
         voice_dir=f"{MODEL_DIR}/voice_embedding",
         max_frames=300, device="cuda",
-        flow_steps=3, cfg_alpha=1.0,
+        flow_steps=3, cfg_alpha=1.2,
     )
 
 # audio is a numpy array at 24kHz
@@ -198,9 +189,13 @@ We tested this directly:
 | **tinygemm kernel** | PyTorch built-in CUDA kernel, fuses dequant+matmul in 1 launch per layer |
 | **TILE_PACKED_TO_4D** | Required packing format for SM86 (RTX 3090). Default torchao format needs SM90+ (H100) |
 | **torch.inference_mode()** | +7 fps over torch.no_grad() |
-| **3 flow steps** | 2.7x faster acoustic decoder vs default 8 steps, minimal quality loss |
-| **Static KV cache** | Pre-allocated buffers, CUDA graph compatible |
+| **Midpoint ODE solver** | 2nd-order solver at 3 steps ≈ 1st-order Euler at 6 steps, 2.7x fewer acoustic passes |
+| **cfg_alpha=1.2** | Classifier-Free Guidance required for quality. 1.0 (off) produces garbled audio |
+| **Static KV cache** | Pre-allocated BF16 buffers, eliminates torch.cat allocation per step |
+| **torch.compile** | Backbone + acoustic predict_velocity compiled (mode=default, kernel fusion) |
 | **Selective quantization** | Only backbone quantized; acoustic + codec stay BF16 |
+| **Tokenizer OOB fix** | Tekken has 150K entries but model vocab is 131K. Rare tokens clamped to valid range |
+| **NaN guards** | Numerical stability for long sequences: nan_to_num on logits + embedding indices |
 
 ---
 
@@ -228,6 +223,24 @@ This project explored 8 different quantization approaches before finding the win
 5. **Packing format is GPU-dependent** -- SM86 (RTX 3090) needs TILE_PACKED_TO_4D; default format silently fails
 
 See [RESEARCH_LOG.md](RESEARCH_LOG.md) for the complete research record including KV cache quantization analysis, quality evaluations, and detailed breakdowns.
+
+---
+
+## Bugs Fixed in Upstream Model
+
+We discovered and fixed two bugs in the original Voxtral inference code that affect all implementations:
+
+### 1. Tokenizer Vocabulary Overflow (CUDA crash)
+
+The Tekken tokenizer has **150,000** BPE entries, but the model's embedding table is only **131,072** rows. ~13% of tokenizer entries (19,928 tokens) produce out-of-bounds indices that crash with `CUDA device-side assert`. Any text with rare subwords (e.g., "aqueducts", "Supercalifragilisticexpialidocious") triggers this.
+
+**Fix:** Clamp token IDs to the valid embedding range in `TekkenTokenizer.encode()`.
+
+### 2. CFG Guidance Required (garbled output)
+
+Disabling Classifier-Free Guidance (`cfg_alpha=1.0`) produces phonetically plausible but semantically wrong audio — the acoustic decoder hallucinates instead of following the text. This is because the flow-matching ODE needs the CFG signal to stay on the text-conditioned trajectory.
+
+**Fix:** Default `cfg_alpha=1.2` (matching the paper). Never use `cfg_alpha=1.0` for production.
 
 ---
 

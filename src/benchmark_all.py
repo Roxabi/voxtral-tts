@@ -9,17 +9,19 @@ import sys
 import os
 import numpy as np
 
-VENV_PYTHON = "/data/mistral-voice/venv/bin/python3"
+VENV_PYTHON = sys.executable  # Use current Python interpreter
 
 WORKER_SCRIPT = """
 import torch, gc, time, sys, os, json
 import soundfile as sf
-sys.path.insert(0, "/data/mistral-voice/src")
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent if '__file__' in dir() else '.'))
+sys.path.insert(0, os.environ.get('SRC_DIR', '.'))
 
 from generate_fast import generate_speech_fast
 from generate import TekkenTokenizer
 
-MODEL_DIR = "/data/mistral-voice/models/original"
+MODEL_DIR = os.environ.get("VOXTRAL_MODEL_DIR", str(Path(__file__).parent.parent / "models" / "original") if '__file__' in dir() else "../models/original")
 VOICE_DIR = f"{MODEL_DIR}/voice_embedding"
 VOICE = "neutral_female"
 
