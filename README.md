@@ -52,12 +52,12 @@ very-long        57 fps 40.0s  Throughout the history of human civilization, the
 | Sample | Description | SNR |
 |--------|-------------|:---:|
 | [BF16 Raw](samples/comparison/bf16_raw.wav) | Original model, 24kHz, no processing | 36.9 dB |
-| [BF16 + Post-processing](samples/comparison/bf16_postprocessed.wav) | Original model + 11kHz LPF + 48kHz upsample | 37.1 dB |
+| [BF16 + Post-processing](samples/comparison/bf16_postprocessed.wav) | Original model + 10kHz LPF + 48kHz upsample | 52.6 dB |
 | [int4 Raw](samples/comparison/int4_raw.wav) | Quantized model, 24kHz, no processing | 32.0 dB |
-| [int4 + Post-processing](samples/comparison/int4_postprocessed.wav) | Quantized model + 11kHz LPF + 48kHz upsample | 31.5 dB |
+| [int4 + Post-processing](samples/comparison/int4_postprocessed.wav) | Quantized model + 10kHz LPF + 48kHz upsample | 35.3 dB |
 
 **Post-processing pipeline** (1.5ms overhead for 3s audio):
-1. **11kHz Butterworth LPF** — removes codec decoder aliasing/hiss
+1. **10kHz 6th-order Butterworth LPF** — removes codec decoder aliasing/hiss (8-12kHz band)
 2. **48kHz polyphase upsample** — standard playback rate
 3. **Warmup frame trim** — removes garbled initial frames ([known issue](https://huggingface.co/mistralai/Voxtral-4B-TTS-2603/discussions/20))
 4. **Peak normalization** to 0.95
