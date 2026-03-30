@@ -36,13 +36,11 @@ from typing import Optional
 warnings.filterwarnings("ignore")
 os.environ["TORCHDYNAMO_VERBOSE"] = "0"
 
-sys.path.insert(0, str(Path(__file__).parent))
-
-from model import VoxtralConfig
-from generate import TekkenTokenizer
-from generate_fast import generate_speech_fast, enable_static_cache
-from torchao_inference import load_model_int4
-from load_model import load_original_model
+from voxtral_tts.model import VoxtralConfig
+from voxtral_tts.generate import TekkenTokenizer
+from voxtral_tts.generate_fast import generate_speech_fast, enable_static_cache
+from voxtral_tts.torchao_inference import load_model_int4
+from voxtral_tts.load_model import load_original_model
 
 # ─── Voice Mapping: Orpheus names → Voxtral names ─────────────────────
 

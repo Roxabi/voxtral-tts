@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from safetensors.torch import load_file
 
-from model import VoxtralTTS, VoxtralConfig
+from voxtral_tts.model import VoxtralTTS, VoxtralConfig
 
 
 def load_original_model(model_dir: str, device="cuda") -> VoxtralTTS:
@@ -41,9 +41,9 @@ def load_quantized_model(quantized_dir: str, device="cuda") -> VoxtralTTS:
     non_quantized = load_file(str(quantized_dir / "non_quantized.safetensors"))
 
     # Load and dequantize backbone weights
-    from turboquant_model import TurboQuantConfig, get_codebook
-    from turboquant_model.quantize import turboquant_quantize, unpack_4bit
-    from turboquant_model.rotation import generate_rotation_matrix
+    from voxtral_tts.turboquant_model import TurboQuantConfig, get_codebook
+    from voxtral_tts.turboquant_model.quantize import turboquant_quantize, unpack_4bit
+    from voxtral_tts.turboquant_model.rotation import generate_rotation_matrix
     import math
 
     tq_config = TurboQuantConfig.load(str(quantized_dir / "turboquant_config.json"))
@@ -95,9 +95,9 @@ def load_quantized_model(quantized_dir: str, device="cuda") -> VoxtralTTS:
 
 def _dequantize_pass(indices_packed, norms, bit_width, group_size, seed):
     """Dequantize a single pass of TurboQuant."""
-    from turboquant_model.quantize import unpack_4bit
-    from turboquant_model.codebook import get_codebook
-    from turboquant_model.rotation import generate_rotation_matrix
+    from voxtral_tts.turboquant_model.quantize import unpack_4bit
+    from voxtral_tts.turboquant_model.codebook import get_codebook
+    from voxtral_tts.turboquant_model.rotation import generate_rotation_matrix
     import math
 
     centroids, boundaries = get_codebook(bit_width)

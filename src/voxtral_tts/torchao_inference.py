@@ -22,8 +22,8 @@ import gc
 from pathlib import Path
 from safetensors.torch import load_file
 
-from model import VoxtralTTS, VoxtralConfig
-from load_model import _assign_weights
+from voxtral_tts.model import VoxtralTTS, VoxtralConfig
+from voxtral_tts.load_model import _assign_weights
 
 
 def _apply_torchao_int4(model, group_size=64):
@@ -96,8 +96,8 @@ def load_model_int4(
 
 if __name__ == "__main__":
     import soundfile as sf
-    from generate_fast import generate_speech_fast
-    from generate import TekkenTokenizer
+    from voxtral_tts.generate_fast import generate_speech_fast
+    from voxtral_tts.generate import TekkenTokenizer
 
     print("=" * 60)
     print("Voxtral-4B-TTS — torchao int4 + HQQ + tinygemm")

@@ -19,9 +19,9 @@ import soundfile as sf
 import numpy as np
 from pathlib import Path
 
-from model import VoxtralConfig, apply_rotary_emb
-from load_model import load_original_model, load_quantized_model
-from generate import TekkenTokenizer
+from voxtral_tts.model import VoxtralConfig, apply_rotary_emb
+from voxtral_tts.load_model import load_original_model, load_quantized_model
+from voxtral_tts.generate import TekkenTokenizer
 
 
 # ─── Static BF16 KV Cache ──────────────────────────────────────────────
@@ -201,7 +201,7 @@ def generate_speech_fast(
     print(f"  {n_frames} frames in {gen_time:.1f}s ({fps:.1f} fps, RTF={rtf:.2f})")
 
     # Trim warmup frames (fixes garbled start, HF discussion #20)
-    from audio_postprocess import trim_warmup_frames, postprocess_audio
+    from voxtral_tts.audio_postprocess import trim_warmup_frames, postprocess_audio
     all_codes = trim_warmup_frames(all_codes)
     n_frames = len(all_codes)
     if n_frames == 0:

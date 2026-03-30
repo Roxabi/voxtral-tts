@@ -18,8 +18,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent if '__file__' in dir() else '.'))
 sys.path.insert(0, os.environ.get('SRC_DIR', '.'))
 
-from generate_fast import generate_speech_fast
-from generate import TekkenTokenizer
+from voxtral_tts.generate_fast import generate_speech_fast
+from voxtral_tts.generate import TekkenTokenizer
 
 MODEL_DIR = os.environ.get("VOXTRAL_MODEL_DIR", str(Path(__file__).parent.parent / "models" / "original") if '__file__' in dir() else "../models/original")
 VOICE_DIR = f"{MODEL_DIR}/voice_embedding"
@@ -68,7 +68,7 @@ elif config_name == "int4_static_compile":
     from torchao_inference import load_model_int4
     model = load_model_int4(MODEL_DIR, device="cuda")
     import torch
-    from generate_fast import enable_static_cache
+    from voxtral_tts.generate_fast import enable_static_cache
     enable_static_cache(model, max_seq_len=700)
     model.backbone = torch.compile(model.backbone, mode="default", fullgraph=False)
     model.acoustic.predict_velocity = torch.compile(

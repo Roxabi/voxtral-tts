@@ -15,8 +15,8 @@ import soundfile as sf
 import numpy as np
 from pathlib import Path
 
-from model import VoxtralConfig
-from load_model import load_original_model, load_quantized_model
+from voxtral_tts.model import VoxtralConfig
+from voxtral_tts.load_model import load_original_model, load_quantized_model
 
 
 class TekkenTokenizer:
