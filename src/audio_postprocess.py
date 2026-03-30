@@ -13,8 +13,10 @@ Optional:
 import numpy as np
 from scipy.signal import butter, sosfilt, resample_poly
 
-# Pre-compute 4th-order Butterworth LPF at 11kHz (free at runtime)
-_LPF_SOS = butter(4, 11000, btype='low', fs=24000, output='sos')
+# Pre-compute 6th-order Butterworth LPF at 10kHz
+# 11kHz was too gentle — codec noise lives in 8-11kHz band
+# 10kHz with steeper rolloff (6th order) cuts noise while preserving speech clarity
+_LPF_SOS = butter(6, 10000, btype='low', fs=24000, output='sos')
 
 
 def postprocess_audio(
