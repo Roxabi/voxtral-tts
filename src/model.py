@@ -403,9 +403,9 @@ class WeightNormConv1d(nn.Module):
 
 
 class CodecQKNorm(nn.Module):
-    def __init__(self, full_dim, eps=1e-2):
+    def __init__(self, full_dim, eps=1e-6):
         super().__init__()
-        # Stored as full dim (1024) but applied across the last dim of Q/K
+        # QK norm uses eps=1e-6 (not 1e-2 like layer norms) per params.json qk_norm_eps
         # Q/K shape: (B, heads, T, head_dim) -> normalize last dim
         self.q_norm = RMSNorm(full_dim, eps)
         self.k_norm = RMSNorm(full_dim, eps)

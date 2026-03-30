@@ -200,6 +200,13 @@ def generate_speech_fast(
     rtf = gen_time / duration
     print(f"  {n_frames} frames in {gen_time:.1f}s ({fps:.1f} fps, RTF={rtf:.2f})")
 
+    # Trim warmup frames (fixes garbled start, HF discussion #20)
+    from audio_postprocess import trim_warmup_frames, postprocess_audio
+    all_codes = trim_warmup_frames(all_codes)
+    n_frames = len(all_codes)
+    if n_frames == 0:
+        return np.zeros(1, dtype=np.float32), gen_time
+
     # Decode to audio — sync first to catch any pending CUDA errors from generation
     try:
         torch.cuda.synchronize()
@@ -209,9 +216,8 @@ def generate_speech_fast(
     except RuntimeError:
         return np.zeros(1, dtype=np.float32), gen_time
 
-    peak = np.abs(audio).max()
-    if peak > 0:
-        audio = audio / peak * 0.95
+    # Post-process: LPF 11kHz + upsample 48kHz + normalize
+    audio = postprocess_audio(audio)
 
     return audio, gen_time
 

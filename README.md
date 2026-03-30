@@ -45,6 +45,50 @@ very-long        57 fps 40.0s  Throughout the history of human civilization, the
 
 **12/12 texts complete, 0 crashes, consistent 55-57 fps.** Quality matches the original BF16 model on all texts (verified side-by-side with Whisper transcription).
 
+### Audio Quality Comparison
+
+*"The weather is beautiful today. I think we should go for a walk in the park."* — neutral_female voice
+
+| Sample | Description | SNR |
+|--------|-------------|:---:|
+| [BF16 Raw](samples/comparison/bf16_raw.wav) | Original model, 24kHz, no processing | 36.9 dB |
+| [BF16 + Post-processing](samples/comparison/bf16_postprocessed.wav) | Original model + 11kHz LPF + 48kHz upsample | 37.1 dB |
+| [int4 Raw](samples/comparison/int4_raw.wav) | Quantized model, 24kHz, no processing | 32.0 dB |
+| [int4 + Post-processing](samples/comparison/int4_postprocessed.wav) | Quantized model + 11kHz LPF + 48kHz upsample | 31.5 dB |
+
+**Post-processing pipeline** (1.5ms overhead for 3s audio):
+1. **11kHz Butterworth LPF** — removes codec decoder aliasing/hiss
+2. **48kHz polyphase upsample** — standard playback rate
+3. **Warmup frame trim** — removes garbled initial frames ([known issue](https://huggingface.co/mistralai/Voxtral-4B-TTS-2603/discussions/20))
+4. **Peak normalization** to 0.95
+
+**Bug fix: Codec QK norm epsilon** — the codec decoder's attention QK normalization used `eps=1e-2` instead of the correct `eps=1e-6` (from params.json). Fixing this single value improved BF16 SNR by **+10 dB**.
+
+### OpenAI-Compatible API Server
+
+Drop-in replacement for any OpenAI TTS API client:
+
+```bash
+# Start server (BF16, Euler-8, best quality)
+python src/serve.py --port 5055 --bf16 --flow-steps 8
+
+# Start server (int4, Euler-8, less VRAM)
+python src/serve.py --port 5055 --flow-steps 8
+
+# Start server (int4, Midpoint-3, fastest)
+python src/serve.py --port 5055 --flow-steps 3
+```
+
+```bash
+# Generate speech
+curl -X POST http://localhost:5055/v1/audio/speech \
+  -H "Content-Type: application/json" \
+  -d '{"input": "Hello, how are you?", "voice": "tara"}' \
+  -o output.wav
+```
+
+Supports 45 voice names (20 native Voxtral + 25 Orpheus-compatible aliases). Output: 48kHz 16-bit mono WAV.
+
 ---
 
 ## Quick Start
