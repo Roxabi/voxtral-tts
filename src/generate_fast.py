@@ -289,7 +289,7 @@ def main():
     parser.add_argument("--text", type=str, required=True)
     parser.add_argument("--voice", type=str, default="neutral_female")
     parser.add_argument("--output", type=str, default="output.wav")
-    parser.add_argument("--model-dir", type=str, default="/data/mistral-voice/models/original")
+    parser.add_argument("--model-dir", type=str, default=str(Path(__file__).parent.parent / "models" / "original"))
     parser.add_argument("--quantized", type=str, default=None)
     parser.add_argument("--max-frames", type=int, default=500)
     parser.add_argument("--flow-steps", type=int, default=3, help="Flow matching steps (default 3, original 8)")

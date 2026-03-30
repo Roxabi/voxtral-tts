@@ -4,7 +4,7 @@ Supports both original BF16 and TurboQuant-quantized models.
 
 Usage:
     python generate.py --text "Hello world" --voice cheerful_female --output hello.wav
-    python generate.py --text "Hello world" --quantized /data/mistral-voice/models/quantized/turboquant
+    python generate.py --text "Hello world" --quantized models/quantized/turboquant
 """
 
 import argparse
@@ -197,7 +197,7 @@ def main():
     parser.add_argument("--text", type=str, required=True, help="Text to synthesize")
     parser.add_argument("--voice", type=str, default="neutral_female", help="Voice name")
     parser.add_argument("--output", type=str, default="output.wav", help="Output WAV file")
-    parser.add_argument("--model-dir", type=str, default="/data/mistral-voice/models/original",
+    parser.add_argument("--model-dir", type=str, default=str(Path(__file__).parent.parent / "models" / "original"),
                        help="Path to original model")
     parser.add_argument("--quantized", type=str, default=None,
                        help="Path to quantized model dir (if set, uses quantized)")

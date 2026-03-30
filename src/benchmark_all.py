@@ -54,9 +54,6 @@ if config_name == "bf16":
 elif config_name == "int4":
     from torchao_inference import load_model_int4
     model = load_model_int4(MODEL_DIR, device="cuda")
-elif config_name == "int4_kv_v1":
-    from kv_cache_quant.loader import load_model_int4_with_kv_quant
-    model = load_model_int4_with_kv_quant(MODEL_DIR, device="cuda")
 elif config_name == "int4_compile":
     import warnings; warnings.filterwarnings('ignore')
     os.environ['TORCHDYNAMO_VERBOSE'] = '0'
@@ -122,7 +119,7 @@ def run_config(name, config_key):
     proc = subprocess.run(
         [VENV_PYTHON, "-c", WORKER_SCRIPT, config_key],
         capture_output=True, text=True, timeout=600,
-        cwd="/data/mistral-voice/src"
+        cwd=os.path.dirname(__file__)
     )
 
     # Print loading output
@@ -154,9 +151,8 @@ def main():
     configs = [
         ("1. BF16 original", "bf16"),
         ("2. int4 backbone (torchao HQQ)", "int4"),
-        ("3. int4 + v1 KV cache (Hadamard+LM)", "int4_kv_v1"),
-        ("4. int4 + compile acoustic", "int4_compile"),
-        ("5. int4 + static cache + compile all", "int4_static_compile"),
+        ("3. int4 + compile acoustic", "int4_compile"),
+        ("4. int4 + static cache + compile all", "int4_static_compile"),
     ]
 
     all_results = {}
